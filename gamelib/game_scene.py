@@ -7,11 +7,14 @@ from pyglet.gl import *
 import pyglet
 import cocos
 from cocos.director import director
+from cocos.sprite import *
 import pymunk as pm
 
 # locals
 from primitives import *
 import HUD
+
+COLL_TYPE_HEAD, COLL_TYPE_BODY, COLL_TYPE_GOAL = range(3)
 
 
 def drawCircle(x, y, r, a):
@@ -51,29 +54,33 @@ class GameLayer(cocos.layer.Layer):
         self.head = None
 
         self.add_segments()
-        self.add_ball()
+        self.add_balls()
+        self.add_goal()
 
+        self.space.add_collisionpair_func( COLL_TYPE_HEAD, COLL_TYPE_GOAL, self.collision_head_goal, None)
 
     def step(self, dt):
         balls_to_remove = []
         for elem in self.elements:
-            if isinstance(elem, pm.Circle) and elem.body.position.y < 0:
-                balls_to_remove.append(elem)
-        
-        for ball in balls_to_remove:
-            self.space.remove(ball, ball.body)
-            self.elements.remove(ball)
-
-            self.add_ball()
+            if isinstance(elem, pm.Circle):
+                elem.data.position = elem.body.position
+                elem.data.rotation = -math.degrees( elem.body.angle )
 
         self.space.step(dt)
 
+
+    # collision detection
+    def collision_head_goal(self, shapeA, shapeB, contacts, normal_coef, data):
+        print shapeA, shapeB
+        return True
+
     def draw( self ):
-        for elem in self.elements:
-            if isinstance(elem, pm.Circle):
-                self.draw_ball( elem )
-            elif isinstance(elem, pm.Segment):
-                self.draw_segment( elem )
+#        for elem in self.elements:
+#            if isinstance(elem, pm.Circle):
+#                self.draw_ball( elem )
+#            elif isinstance(elem, pm.Segment):
+#                self.draw_segment( elem )
+        pass
 
     def draw_ball( self, ball ):
 #        d = ball.body.position + ball.center.cpvrotate(ball.body.rotation_vector)
@@ -84,7 +91,9 @@ class GameLayer(cocos.layer.Layer):
     def draw_segment( self, s ):
         a = s.body.position + s.a 
         b = s.body.position + s.b
+        glPushAttrib(GL_CURRENT_BIT)
         Polygon( v=[ a, b ], color=(1.0,0.5,0.5,1.0), stroke=1.0 ).render()
+        glPopAttrib()
 
     def add_segments(self):
         x,y = director.get_window_size()
@@ -108,38 +117,82 @@ class GameLayer(cocos.layer.Layer):
         self.space.add_static(l0,l1,l2,l3)
         self.elements += (l0,l1,l2,l3)
 
-    def add_ball(self):
+    def add_balls(self):
         """Add a ball to the space space at a random position"""
 
         last = None
-        for i in xrange(35):
-            body,shape = self.create_ball()
-            body.position = (320+i*20,200+i*20)
-            shape.data = i
+        for i in xrange(4):
+            if i==0:
+                body,shape,sprite = self.create_head_ball()
+                shape.collision_type = COLL_TYPE_HEAD
+            else:
+                body,shape,sprite = self.create_ball()
+                shape.collision_type = COLL_TYPE_BODY
+            body.position = (320+i*20,50)
+            shape.data = sprite
 
             self.space.add(body, shape)
             self.elements.append( shape )
+
+            self.add( sprite, z=-1 )
 
             if i == 0:
                 self.head = body
 
             if last:
-                joint = pm.SlideJoint(last, body, (0,0), (0,0), 0, 30)
+                joint = pm.SlideJoint(last, body, (0,0), (0,0), 25, 40)
 #                joint = pm.PinJoint(last, body, last.position, last.position, 10, 40)
                 self.space.add( joint )
 
             last = body
 
+    def add_goal(self):
+        body,shape,sprite = self.create_goal_ball()
+        body.position = 400,400
+        shape.data = sprite
+        shape.collision_type = COLL_TYPE_GOAL
+
+        self.add( sprite, z=-1)
+
+        self.space.add(body, shape)
+        self.elements.append( shape )
+
+
     def create_ball(self):
-        mass = 1
-        radius = 10
+        mass = 0.5
+        radius = 12
         inertia = pm.moment_for_circle(mass, 0, radius, (0,0))
         body = pm.Body(mass, inertia)
         shape = pm.Circle(body, radius, (0,0))
         shape.friction  = 1.5
         shape.elasticity = 1.0
+        sprite = Sprite('ball.png')
 
-        return (body,shape)
+        return (body,shape,sprite)
+
+    def create_head_ball(self):
+        mass = 5
+        radius = 15
+        inertia = pm.moment_for_circle(mass, 0, radius, (0,0))
+        body = pm.Body(mass, inertia)
+        shape = pm.Circle(body, radius, (0,0))
+        shape.friction  = 1.5
+        shape.elasticity = 1.0
+        sprite = Sprite('ball_head.png')
+
+        return (body,shape,sprite)
+
+    def create_goal_ball(self):
+        mass = 20
+        radius = 45/2
+        inertia = pm.moment_for_circle(mass, 0, radius, (0,0))
+        body = pm.Body(mass, inertia)
+        shape = pm.Circle(body, radius, (0,0))
+        shape.friction  = 1.5
+        shape.elasticity = 1.0
+        sprite = Sprite('ball_goal.png')
+
+        return (body,shape,sprite)
 
     def on_key_press (self, key, modifiers):
         i = ord('i')
@@ -148,7 +201,7 @@ class GameLayer(cocos.layer.Layer):
         l = ord('l')
         r = ord('r')
         if key in (i,j,k,l,r):
-            force_value = 25
+            force_value = 20
             force = (0,0)
             if key == i:
                 force = (0,force_value)
@@ -161,7 +214,8 @@ class GameLayer(cocos.layer.Layer):
             elif key == r:
                 force = (0,0)
                 self.head.reset_forces()
-            self.head.apply_force(force, (0,0) )
+#            self.head.apply_force(force, (0,0) )
+            self.head.apply_impulse(force, (0,0) )
             return True 
         return False 
 
@@ -170,4 +224,5 @@ def get_game_scene():
     s = cocos.scene.Scene()
     s.add( GameLayer(), z=0)
     s.add( HUD.BackgroundLayer(), z=-1)
+    s.add( HUD.HUD(), z=1 )
     return s

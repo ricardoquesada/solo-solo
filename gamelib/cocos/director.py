@@ -165,20 +165,20 @@ class DefaultHandler( object ):
             return True
 
         elif symbol == pyglet.window.key.W and (modifiers & pyglet.window.key.MOD_ACCEL):
-#            import wired
+            import wired
             if self.wired == False:
                 glDisable(GL_TEXTURE_2D);
                 glPolygonMode(GL_FRONT, GL_LINE);
                 glPolygonMode(GL_BACK, GL_LINE);
-#                wired.wired.install()
-#                wired.wired.uset4F('color', 1.0, 1.0, 1.0, 1.0 )
+                wired.wired.install()
+                wired.wired.uset4F('color', 1.0, 1.0, 1.0, 1.0 )
                 self.wired = True
             else:
                 glEnable(GL_TEXTURE_2D);
                 glPolygonMode(GL_FRONT, GL_FILL);
                 glPolygonMode(GL_BACK, GL_FILL);
                 self.wired = False 
-#                wired.wired.uninstall()
+                wired.wired.uninstall()
             return True
 
         elif symbol == pyglet.window.key.X and (modifiers & pyglet.window.key.MOD_ACCEL):
@@ -211,9 +211,7 @@ class DefaultHandler( object ):
 class Director(event.EventDispatcher):
     """Class that creates and handle the main Window and manages how
        and when to execute the Scenes"""
-    #: a dict with locals for the interactive python interpreter (fill with what you need)
-    interpreter_locals = {}
-
+    
     def init(self, *args, **kwargs):
         """Initializes the Director creating the main window.
         Keyword arguments are passed to pyglet.window.Window().
@@ -225,9 +223,6 @@ class Director(event.EventDispatcher):
         :rtype: pyglet.window.Window                    
         :returns: The main window, an instance of pyglet.window.Window class.
         """
-
-        # pop out the Cocos-specific flag
-        do_not_scale_window = kwargs.pop('do_not_scale', False)
        
         #: pyglet's window object
         self.window = window.Window( *args, **kwargs )
@@ -244,12 +239,10 @@ class Director(event.EventDispatcher):
         #: this is the next scene that will be shown
         self.next_scene = None
 
+
         # save resolution and aspect for resize / fullscreen
-        if do_not_scale_window:
-            self.window.push_handlers(on_resize=self.unscaled_resize_window)
-        else:
-            self.window.push_handlers(on_resize=self.scaled_resize_window)
-        self.window.push_handlers(self.on_draw)
+        self.window.on_resize = self.on_resize_window
+        self.window.on_draw = self.on_draw
         self._window_original_width = self.window.width
         self._window_original_height = self.window.height
         self._window_aspect =  self.window.width / float( self.window.height )
@@ -284,7 +277,7 @@ class Director(event.EventDispatcher):
         self.scene_stack.append( self.scene )
         self._set_scene( scene )
 
-        event_loop.run()
+        pyglet.app.run()
 
 
     def on_draw( self ):
@@ -406,17 +399,8 @@ class Director(event.EventDispatcher):
         return ( int( x_diff * x) - adjust_x,   int( y_diff * y ) - adjust_y )
 
 
-    def scaled_resize_window( self, width, height):
-        """One of two possible methods that are called when the main window is resized.
-
-        This implementation scales the display such that the initial resolution
-        requested by the programmer (the "logical" resolution) is always retained
-        and the content scaled to fit the physical display.
-
-        This implementation also sets up a 3D projection for compatibility with the
-        largest set of Cocos transforms.
-
-        The other implementation is `unscaled_resize_window`.
+    def on_resize_window( self, width, height):
+        """Method that is called every time the main window is resized.
         
         :Parameters:
             `width` : Integer
@@ -425,27 +409,6 @@ class Director(event.EventDispatcher):
                 New height
         """
         self.set_projection()
-        self.dispatch_event("on_resize", width, height)
-        return pyglet.event.EVENT_HANDLED
-
-    def unscaled_resize_window(self, width, height):
-        """One of two possible methods that are called when the main window is resized.
-
-        This implementation does not scale the display but rather forces the logical
-        resolution to match the physical one.
-
-        This implementation sets up a 2D projection, resulting in the best pixel
-        alignment possible. This is good for text and other detailed 2d graphics
-        rendering.
-
-        The other implementation is `scaled_resize_window`.
-        
-        :Parameters:
-            `width` : Integer
-                New width
-            `height` : Integer
-                New height
-        """
         self.dispatch_event("on_resize", width, height)
 
     def set_projection(self):
@@ -493,14 +456,9 @@ class Director(event.EventDispatcher):
             glDisable( GL_DEPTH_TEST )
 
 
-event_loop = pyglet.app.EventLoop()
 director = Director()
-director.event = event_loop.event
 """The singleton; check `cocos.director.Director` for details on usage.
 Don't instantiate Director(). Just use this singleton."""
-
-director.interpreter_locals["director"] = director
-director.interpreter_locals["cocos"] = cocos
 
 Director.register_event_type('on_push')
 Director.register_event_type('on_pop')

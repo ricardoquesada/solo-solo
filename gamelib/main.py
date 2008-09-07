@@ -17,6 +17,7 @@ def main():
     font.add_directory('../data')
 
     director.init()
+    director.set_depth_test(True)
 
     s = get_game_scene()
     director.run (s)
