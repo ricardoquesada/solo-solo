@@ -16,7 +16,7 @@ import pymunk as pm
 from primitives import *
 import HUD
 
-COLL_TYPE_IGNORE, COLL_TYPE_HEAD, COLL_TYPE_BODY, COLL_TYPE_GOAL = range(4)
+COLL_TYPE_IGNORE, COLL_TYPE_HEAD, COLL_TYPE_BODY, COLL_TYPE_TAIL, COLL_TYPE_GOAL = range(5)
 
 
 def drawCircle(x, y, r, a):
@@ -72,7 +72,7 @@ class GameLayer(cocos.layer.Layer):
 
         for i,b in enumerate( self.chain):
             if i > 0:
-                self.chain[i-1].damped_spring( self.chain[i], (0,0), (0,0), 30.0, 30.0, 150.0, dt)
+                self.chain[i-1].damped_spring( self.chain[i], (0,0), (0,0), 40.0, 200.0, 50.0, dt)
 
         self.space.step(dt)
 
@@ -81,9 +81,9 @@ class GameLayer(cocos.layer.Layer):
     def collision_head_goal(self, shapeA, shapeB, contacts, normal_coef, data):
         print shapeA, shapeB
         body,shape,sprite = self.create_body_ball()
-        body.position = self.chain[-1].position + (5,5)
+        body.position = self.chain[-2].position + (5,5)
         self.attach_ball(body)
-        self.chain.append( body )
+        self.chain.insert(-1,body)
         return True
 
     def draw( self ):
@@ -131,12 +131,15 @@ class GameLayer(cocos.layer.Layer):
     def add_balls(self):
         """Add a ball to the space space at a random position"""
 
-        for i in xrange(8):
+        NUM_BALLS = 2
+        for i in xrange(NUM_BALLS):
             if i==0:
                 body,shape,sprite = self.create_head_ball()
+            elif i==NUM_BALLS-1:                
+                body,shape,sprite = self.create_tail_ball()
             else:
                 body,shape,sprite = self.create_body_ball()
-            body.position = (320+i*20,50)
+            body.position = (320+i*10,50)
 
 
             if len( self.chain) > 0:
@@ -156,7 +159,7 @@ class GameLayer(cocos.layer.Layer):
         self.space.add(body, shape)
 
     def create_body_ball(self):
-        mass = 0.5
+        mass = 2
         radius = 12
         inertia = pm.moment_for_circle(mass, 0, radius, (0,0))
         body = pm.Body(mass, inertia)
@@ -181,6 +184,22 @@ class GameLayer(cocos.layer.Layer):
         shape.elasticity = 1.0
         sprite = Sprite('ball_head.png')
         shape.collision_type = COLL_TYPE_HEAD
+        shape.data = sprite
+
+        self.space.add(body, shape)
+        self.add( sprite, z=-1 )
+        return (body,shape,sprite)
+
+    def create_tail_ball(self):
+        mass = 5
+        radius = 15
+        inertia = pm.moment_for_circle(mass, 0, radius, (0,0))
+        body = pm.Body(mass, inertia)
+        shape = pm.Circle(body, radius, (0,0))
+        shape.friction  = 1.5
+        shape.elasticity = 1.0
+        sprite = Sprite('ball_tail.png')
+        shape.collision_type = COLL_TYPE_TAIL
         shape.data = sprite
 
         self.space.add(body, shape)
