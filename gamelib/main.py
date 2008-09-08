@@ -12,9 +12,9 @@ import data
 
 def main():
 
-    pyglet.resource.path.append('../data')
+    pyglet.resource.path.append('data')
     pyglet.resource.reindex()
-    font.add_directory('../data')
+    font.add_directory('data')
 
     director.init()
     director.set_depth_test(True)
