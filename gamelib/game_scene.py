@@ -3,8 +3,10 @@ import math
 import random
 
 # 3rd party libs
-from pyglet.gl import *
 import pyglet
+from pyglet.gl import *
+from pyglet.window.key import *
+
 import cocos
 from cocos.director import director
 from cocos.sprite import *
@@ -14,7 +16,7 @@ import pymunk as pm
 from primitives import *
 import HUD
 
-COLL_TYPE_HEAD, COLL_TYPE_BODY, COLL_TYPE_GOAL = range(3)
+COLL_TYPE_IGNORE, COLL_TYPE_HEAD, COLL_TYPE_BODY, COLL_TYPE_GOAL = range(4)
 
 
 def drawCircle(x, y, r, a):
@@ -44,14 +46,11 @@ class GameLayer(cocos.layer.Layer):
 
         self.schedule( self.step )
 
-
         pm.init_pymunk()
         self.space = pm.Space( iterations=10)
         self.space.gravity = (0, 0.0)
 
-        self.elements=[]
-
-        self.head = None
+        self.chain = []
 
         self.add_segments()
         self.add_balls()
@@ -59,12 +58,21 @@ class GameLayer(cocos.layer.Layer):
 
         self.space.add_collisionpair_func( COLL_TYPE_HEAD, COLL_TYPE_GOAL, self.collision_head_goal, None)
 
+
     def step(self, dt):
         balls_to_remove = []
-        for elem in self.elements:
+        for elem in self.space.shapes:
             if isinstance(elem, pm.Circle):
                 elem.data.position = elem.body.position
                 elem.data.rotation = -math.degrees( elem.body.angle )
+
+
+        for body in self.chain:
+            body.reset_forces()
+
+        for i,b in enumerate( self.chain):
+            if i > 0:
+                self.chain[i-1].damped_spring( self.chain[i], (0,0), (0,0), 30.0, 30.0, 150.0, dt)
 
         self.space.step(dt)
 
@@ -72,6 +80,10 @@ class GameLayer(cocos.layer.Layer):
     # collision detection
     def collision_head_goal(self, shapeA, shapeB, contacts, normal_coef, data):
         print shapeA, shapeB
+        body,shape,sprite = self.create_body_ball()
+        body.position = self.chain[-1].position + (5,5)
+        self.attach_ball(body)
+        self.chain.append( body )
         return True
 
     def draw( self ):
@@ -109,56 +121,41 @@ class GameLayer(cocos.layer.Layer):
         l1.friction = 1.0
         l2.friction = 1.0
         l3.friction = 1.0
-        l0.elasticity = 0.8
-        l1.elasticity = 1.2
-        l2.elasticity = 1.2
-        l3.elasticity = 1.2
+        l0.elasticity = 0.7
+        l1.elasticity = 0.7
+        l2.elasticity = 0.7
+        l3.elasticity = 0.7
         
         self.space.add_static(l0,l1,l2,l3)
-        self.elements += (l0,l1,l2,l3)
 
     def add_balls(self):
         """Add a ball to the space space at a random position"""
 
-        last = None
-        for i in xrange(4):
+        for i in xrange(8):
             if i==0:
                 body,shape,sprite = self.create_head_ball()
-                shape.collision_type = COLL_TYPE_HEAD
             else:
-                body,shape,sprite = self.create_ball()
-                shape.collision_type = COLL_TYPE_BODY
+                body,shape,sprite = self.create_body_ball()
             body.position = (320+i*20,50)
-            shape.data = sprite
 
-            self.space.add(body, shape)
-            self.elements.append( shape )
 
-            self.add( sprite, z=-1 )
+            if len( self.chain) > 0:
+                self.attach_ball( body )
 
-            if i == 0:
-                self.head = body
+            self.chain.append( body )
 
-            if last:
-                joint = pm.SlideJoint(last, body, (0,0), (0,0), 25, 40)
-#                joint = pm.PinJoint(last, body, last.position, last.position, 10, 40)
-                self.space.add( joint )
-
-            last = body
+    def attach_ball( self, body ):
+#        joint = pm.SlideJoint(self.chain[-1], body, (0,0), (0,0), 25, 40)
+#        self.space.add( joint )
+        pass
 
     def add_goal(self):
         body,shape,sprite = self.create_goal_ball()
         body.position = 400,400
-        shape.data = sprite
-        shape.collision_type = COLL_TYPE_GOAL
-
         self.add( sprite, z=-1)
-
         self.space.add(body, shape)
-        self.elements.append( shape )
 
-
-    def create_ball(self):
+    def create_body_ball(self):
         mass = 0.5
         radius = 12
         inertia = pm.moment_for_circle(mass, 0, radius, (0,0))
@@ -167,7 +164,11 @@ class GameLayer(cocos.layer.Layer):
         shape.friction  = 1.5
         shape.elasticity = 1.0
         sprite = Sprite('ball.png')
+        shape.collision_type = COLL_TYPE_BODY
+        shape.data = sprite
 
+        self.space.add(body, shape)
+        self.add( sprite, z=-1 )
         return (body,shape,sprite)
 
     def create_head_ball(self):
@@ -179,7 +180,11 @@ class GameLayer(cocos.layer.Layer):
         shape.friction  = 1.5
         shape.elasticity = 1.0
         sprite = Sprite('ball_head.png')
+        shape.collision_type = COLL_TYPE_HEAD
+        shape.data = sprite
 
+        self.space.add(body, shape)
+        self.add( sprite, z=-1 )
         return (body,shape,sprite)
 
     def create_goal_ball(self):
@@ -191,31 +196,30 @@ class GameLayer(cocos.layer.Layer):
         shape.friction  = 1.5
         shape.elasticity = 1.0
         sprite = Sprite('ball_goal.png')
+        shape.data = sprite
+        shape.collision_type = COLL_TYPE_GOAL
 
+        self.space.add(body, shape)
+        self.add( sprite, z=-1 )
         return (body,shape,sprite)
 
     def on_key_press (self, key, modifiers):
-        i = ord('i')
-        j = ord('j')
-        k = ord('k')
-        l = ord('l')
-        r = ord('r')
-        if key in (i,j,k,l,r):
-            force_value = 20
+        if key in (LEFT, RIGHT, UP, DOWN):
+            force_value = 50
             force = (0,0)
-            if key == i:
+            if key == UP:
                 force = (0,force_value)
-            elif key == k:
+            elif key == DOWN:
                 force = (0,-force_value)
-            elif key == j:
+            elif key == LEFT:
                 force = (-force_value,0)
-            elif key == l:
+            elif key == RIGHT:
                 force = (force_value,0)
-            elif key == r:
+            elif key == KEY_R:
                 force = (0,0)
-                self.head.reset_forces()
-#            self.head.apply_force(force, (0,0) )
-            self.head.apply_impulse(force, (0,0) )
+                self.chain[0].reset_forces()
+#            self.chain[0].apply_force(force, (0,0) )
+            self.chain[0].apply_impulse(force, (0,0) )
             return True 
         return False 
 
