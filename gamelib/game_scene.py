@@ -56,7 +56,7 @@ class GameLayer(cocos.layer.Layer):
         self.add_balls()
         self.add_goal()
 
-        self.space.add_collisionpair_func( COLL_TYPE_HEAD, COLL_TYPE_GOAL, self.collision_head_goal, None)
+        self.space.add_collisionpair_func( COLL_TYPE_TAIL, COLL_TYPE_GOAL, self.collision_head_goal, None)
 
 
     def step(self, dt):
@@ -67,6 +67,8 @@ class GameLayer(cocos.layer.Layer):
                 elem.data.rotation = -math.degrees( elem.body.angle )
 
 
+        self.space.step(dt)
+
         for body in self.chain:
             body.reset_forces()
 
@@ -74,7 +76,6 @@ class GameLayer(cocos.layer.Layer):
             if i > 0:
                 self.chain[i-1].damped_spring( self.chain[i], (0,0), (0,0), 40.0, 200.0, 50.0, dt)
 
-        self.space.step(dt)
 
 
     # collision detection
@@ -86,13 +87,13 @@ class GameLayer(cocos.layer.Layer):
         self.chain.insert(-1,body)
         return True
 
-    def draw( self ):
-#        for elem in self.elements:
+#    def draw( self ):
+#        for elem in self.space.shapes:
 #            if isinstance(elem, pm.Circle):
 #                self.draw_ball( elem )
 #            elif isinstance(elem, pm.Segment):
 #                self.draw_segment( elem )
-        pass
+#        pass
 
     def draw_ball( self, ball ):
 #        d = ball.body.position + ball.center.cpvrotate(ball.body.rotation_vector)
@@ -159,7 +160,7 @@ class GameLayer(cocos.layer.Layer):
         self.space.add(body, shape)
 
     def create_body_ball(self):
-        mass = 2
+        mass = 1
         radius = 12
         inertia = pm.moment_for_circle(mass, 0, radius, (0,0))
         body = pm.Body(mass, inertia)
@@ -175,13 +176,13 @@ class GameLayer(cocos.layer.Layer):
         return (body,shape,sprite)
 
     def create_head_ball(self):
-        mass = 5
+        mass = 3
         radius = 15
         inertia = pm.moment_for_circle(mass, 0, radius, (0,0))
         body = pm.Body(mass, inertia)
         shape = pm.Circle(body, radius, (0,0))
-        shape.friction  = 1.5
-        shape.elasticity = 1.0
+        shape.friction  = 1.0
+        shape.elasticity = 0.9
         sprite = Sprite('ball_head.png')
         shape.collision_type = COLL_TYPE_HEAD
         shape.data = sprite
@@ -191,13 +192,13 @@ class GameLayer(cocos.layer.Layer):
         return (body,shape,sprite)
 
     def create_tail_ball(self):
-        mass = 5
-        radius = 15
+        mass = 2
+        radius = 13
         inertia = pm.moment_for_circle(mass, 0, radius, (0,0))
         body = pm.Body(mass, inertia)
         shape = pm.Circle(body, radius, (0,0))
-        shape.friction  = 1.5
-        shape.elasticity = 1.0
+        shape.friction  = 1.0
+        shape.elasticity = 0.9
         sprite = Sprite('ball_tail.png')
         shape.collision_type = COLL_TYPE_TAIL
         shape.data = sprite
@@ -212,8 +213,8 @@ class GameLayer(cocos.layer.Layer):
         inertia = pm.moment_for_circle(mass, 0, radius, (0,0))
         body = pm.Body(mass, inertia)
         shape = pm.Circle(body, radius, (0,0))
-        shape.friction  = 1.5
-        shape.elasticity = 1.0
+        shape.friction  = 1.0
+        shape.elasticity = 0.9
         sprite = Sprite('ball_goal.png')
         shape.data = sprite
         shape.collision_type = COLL_TYPE_GOAL
@@ -223,7 +224,7 @@ class GameLayer(cocos.layer.Layer):
         return (body,shape,sprite)
 
     def on_key_press (self, key, modifiers):
-        if key in (LEFT, RIGHT, UP, DOWN):
+        if key in (LEFT, RIGHT, UP, DOWN, R):
             force_value = 50
             force = (0,0)
             if key == UP:
@@ -234,7 +235,7 @@ class GameLayer(cocos.layer.Layer):
                 force = (-force_value,0)
             elif key == RIGHT:
                 force = (force_value,0)
-            elif key == KEY_R:
+            elif key == R:
                 force = (0,0)
                 self.chain[0].reset_forces()
 #            self.chain[0].apply_force(force, (0,0) )

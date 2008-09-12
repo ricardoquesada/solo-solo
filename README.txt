@@ -1,7 +1,7 @@
-Your Game Title
-===============
+So long ago
+===========
 
-Entry in PyWeek #4  <http://www.pyweek.org/4/>
+Entry in PyWeek #7  <http://www.pyweek.org/4/>
 Team: YOUR TEAM NAME (leave the "Team: bit")
 Members: YOUR TEAM MEMBERS (leave the "Members: bit")
 
