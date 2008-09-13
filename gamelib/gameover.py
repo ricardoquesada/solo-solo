@@ -30,7 +30,7 @@ class GameOver( ColorLayer ):
 
         if win:
             soundex.play('oh_yeah.mp3')
-            msg = 'YOU LOVE, WE LOVE'
+            msg = 'LOVE ME DO'
         else:
             soundex.play('no.mp3')
             msg = 'GAME OVER'
