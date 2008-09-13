@@ -347,8 +347,11 @@ class ControlLayer( cocos.layer.Layer ):
     def on_key_release (self, key, modifiers):
         if state.state == state.STATE_PLAY:
             if key in (LEFT, RIGHT, UP, DOWN):
-                self.keys_pressed.remove(key)
-                self.update_keys()
+                try:
+                    self.keys_pressed.remove(key)
+                    self.update_keys()
+                except KeyError:
+                    self.keys_pressed = set()
                 return True 
         return False 
 
