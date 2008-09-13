@@ -66,9 +66,9 @@ class Level3( Level ):
     goals = len( goals_pos )
     gravity = (0,-30)
 
-    title = "Falling Love"
+    title = "Fall in Love"
 
-class Level4( Level ):
+class LevelKisses( Level ):
     balls = 2
     head_pos = (320,50)
 
@@ -77,6 +77,17 @@ class Level4( Level ):
     goals = len( goals_pos )
 
     title = "Kisses"
+
+
+class LevelTantric( Level ):
+    balls = 2
+    head_pos = (320,50)
+
+    goals_pos = [ (150,150), (490,150) ]
+    goals_forces = [ (25,0), (-25,0) ]
+    goals = len( goals_pos )
+
+    title = "Tantric Love"
 
 
 class Level5( Level ):
@@ -131,7 +142,7 @@ class LevelLong( Level ):
     goals_forces = [ (0,0) ]
     goals = len( goals_pos )
 
-    title = "Condom"
+    title = "Solo Love"
 
 class LevelColumn( Level ):
     balls = 2
@@ -141,7 +152,28 @@ class LevelColumn( Level ):
     goals_forces = [ (0,-160), (0,-160), (0,-160), (0,-160)]
     goals = len( goals_pos )
 
-    title = "Train Love"
+    title = "Tandem Love"
+
+class LevelMachine( Level ):
+    balls = 2
+    head_pos = (320,50)
+
+    goals_pos = [ (300,240), (340,240), (640/2,240) ]
+    goals_forces = [ (-1600,0), (1800,0), (0,2000) ]
+    goals = len( goals_pos )
+
+    title = "Love Machine"
+
+class LevelPussy( Level ):
+    balls = 2
+    head_pos = (320,50)
+    time=70
+
+    goals_pos = [ (150,150), (170,200), (130,200), (110,250), (190,250)]
+    goals_forces = [ (0,-100), (0,-100), (0,-100), (0,-100), (0,-100)]
+    goals = len( goals_pos )
+
+    title = "Pussy Love"
 
 class LevelOrgy( Level ):
     time = 60
@@ -181,4 +213,4 @@ class LevelLove( Level ):
     title = "Dunga Dunga"
 
 
-levels = [ LevelTut, Level0, Level1, Level2, Level3, Level4, Level5, LevelMenage, Level6, LevelSwingers, LevelLong, LevelColumn, LevelWorm, LevelOrgy, LevelLove ]
+levels = [ LevelTut, Level0, Level1, Level2, Level3, LevelKisses, LevelTantric, Level5, LevelMenage, LevelMachine, Level6, LevelSwingers, LevelLong, LevelColumn, LevelWorm, LevelPussy, LevelOrgy, LevelLove ]

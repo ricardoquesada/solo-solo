@@ -26,15 +26,25 @@ import levels
 class TitleLayer( Layer ):
     def __init__(self):
         super( TitleLayer, self ).__init__()
-        self.img = pyglet.resource.image('so_long_ago.png')
 
-        self.y=320
+        w,h = director.get_window_size()
+        self.font_title = {}
 
-    def draw( self ):
-        glPushMatrix()
-        self.transform()
-        self.img.blit(0,0)
-        glPopMatrix()
+        # you can override the font that will be used for the title and the items
+        self.font_title['font_name'] = 'Edit Undo Line BRK'
+        self.font_title['font_size'] = 26
+#        self.font_title['color'] = (204,164,164,255)
+        self.font_title['color'] = (255,204,204,255)
+        self.font_title['anchor_y'] ='top'
+        self.font_title['anchor_x'] ='right'
+        title = Label('A LOVE STORY', **self.font_title )
+        title.position=(w-10,30)
+        self.add(title,z=1)
+
+        self.font_title['color'] = (64,32,32,255)
+        title = Label('A LOVE STORY', **self.font_title )
+        title.position=(w-12,32)
+        self.add(title,z=0)
 
 class ScoresLayer( ColorLayer):
 
@@ -300,7 +310,7 @@ def get_menu_scene():
                     ),
                 z=2 ) 
     scene.add( BackgroundLayer(), z=0 )
-#    scene.add( TitleLayer(), z=2)
+    scene.add( TitleLayer(), z=2)
     game_model = GameLayer(demo=True)
     scene.add( game_model, z=1)
     scene.add( MenuControlLayer( game_model), z=0)

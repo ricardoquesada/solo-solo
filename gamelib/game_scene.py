@@ -373,6 +373,7 @@ class ControlLayer( cocos.layer.Layer ):
         state.start_level = max( state.start_level, state.level_idx )
 
     def restart_level( self ):
+        state.score = 0
         self.parent.remove( self.model )
         self.model = GameLayer(demo=False, start_level=state.level_idx )
         self.parent.add( self.model )

@@ -1,5 +1,5 @@
-So long
-=======
+So long, a love story
+=====================
 
 Entry in PyWeek #7  <http://www.pyweek.org/4/>
 Team: Solo solo
