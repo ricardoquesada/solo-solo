@@ -58,8 +58,8 @@ class Level4( Level ):
     balls = 2
     head_pos = (320,50)
 
-    goals_pos = [ (150,300), (490,300), (640/2,250), (640/2,350) ]
-    goals_forces = [ (50,0), (-50,0), (0,50), (0,-50) ]
+    goals_pos = [ (150,300), (490,300), (640/2,250)  ]
+    goals_forces = [ (250,0), (-250,0), (0,250) ]
     goals = len( goals_pos )
 
     title = "Level 4: Movement"
