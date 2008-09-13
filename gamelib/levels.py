@@ -55,7 +55,7 @@ class Level3( Level ):
     title = "Level 3: Gravity"
 
 class Level4( Level ):
-    balls = 3
+    balls = 2
     head_pos = (320,50)
 
     goals_pos = [ (150,300), (490,300), (640/2,250), (640/2,350) ]
@@ -65,4 +65,15 @@ class Level4( Level ):
     title = "Level 4: Movement"
 
 
-levels = [ Level0, Level1, Level2, Level3, Level4 ]
+class Level5( Level ):
+    balls = 8
+    head_pos = (320,50)
+
+#    goals_pos = [ (150,300), (490,300), (640/2,250), (640/2,350) ]
+#    goals_forces = [ (50,0), (-50,0), (0,50), (0,-50) ]
+#    goals = len( goals_pos )
+
+    title = "Level 5: Long Tail"
+
+
+levels = [ Level0, Level1, Level2, Level3, Level4, Level5 ]

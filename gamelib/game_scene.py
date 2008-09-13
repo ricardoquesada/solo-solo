@@ -47,17 +47,20 @@ def drawCircleShape(circle):
 
 class GameLayer(cocos.layer.Layer):
 
-    def __init__(self, demo=False):
+    def __init__(self, demo=False, start_level=state.start_level):
         super(GameLayer,self).__init__()
 
         self.schedule( self.step )
 
         self.demo_mode = demo
 
+        state.set_level( start_level )
+        self.level = state.level
+
         pm.init_pymunk()
         self.space = pm.Space( iterations=10)
 
-        self.space.gravity = state.level.gravity
+        self.space.gravity = self.level.gravity
         self.space.damping = 0.8
 
         self.chain = []
@@ -86,11 +89,11 @@ class GameLayer(cocos.layer.Layer):
 
         for i,b in enumerate( self.chain):
             if i > 0:
-                self.chain[i-1].damped_spring( self.chain[i], (0,0), (0,0), 40.0, 200.0, 50.0, dt)
+                self.chain[i-1].damped_spring( self.chain[i], (0,0), (0,0), 30.0, 200.0, 50.0, dt)
 
         for i,goal in enumerate(self.goals):
             goal.reset_forces()
-            goal.apply_force( state.level.goals_forces[i], (0,0) )
+            goal.apply_force( self.level.goals_forces[i], (0,0) )
 
 
 
@@ -141,18 +144,18 @@ class GameLayer(cocos.layer.Layer):
         body = pm.Body(pm.inf, pm.inf)           # mass, inertia
         body.position = (0,0)               #     
 
-        l0 = pm.Segment(body, (0,1), (x,1), 1.0)
-        l1 = pm.Segment(body, (0,0), (0,y), 1.0)
-        l2 = pm.Segment(body, (x,1), (x,y), 1.0)
-        l3 = pm.Segment(body, (0,y), (x,y), 1.0)
-        l0.friction = 1.0
-        l1.friction = 1.0
-        l2.friction = 1.0
-        l3.friction = 1.0
-        l0.elasticity = 0.7
-        l1.elasticity = 0.7
-        l2.elasticity = 0.7
-        l3.elasticity = 0.7
+        l0 = pm.Segment(body, (0,1), (x,1), 5.0)
+        l1 = pm.Segment(body, (0,0), (0,y), 5.0)
+        l2 = pm.Segment(body, (x,1), (x,y), 5.0)
+        l3 = pm.Segment(body, (0,y), (x,y), 5.0)
+        l0.friction = 0.2
+        l1.friction = 0.2
+        l2.friction = 0.2
+        l3.friction = 0.2
+        l0.elasticity = 0.9
+        l1.elasticity = 0.9
+        l2.elasticity = 0.9
+        l3.elasticity = 0.9
         
         self.space.add_static(l0,l1,l2,l3)
 
@@ -162,7 +165,7 @@ class GameLayer(cocos.layer.Layer):
         if self.demo_mode:
             number_of_balls = 6
         else:
-            number_of_balls = state.level.balls
+            number_of_balls = self.level.balls
         for i in xrange(number_of_balls):
             if i==0:
                 body,shape,sprite = self.create_head_ball()
@@ -170,7 +173,7 @@ class GameLayer(cocos.layer.Layer):
                 body,shape,sprite = self.create_tail_ball()
             else:
                 body,shape,sprite = self.create_body_ball()
-            x,y = state.level.head_pos
+            x,y = self.level.head_pos
             body.position = (x+i*10,y)
 
 
@@ -185,7 +188,7 @@ class GameLayer(cocos.layer.Layer):
         pass
 
     def add_goal(self):
-        for goal in state.level.goals_pos:
+        for goal in self.level.goals_pos:
             body,shape,sprite = self.create_goal_ball()
             body.position = goal
             self.add( sprite, z=-1)
@@ -193,7 +196,7 @@ class GameLayer(cocos.layer.Layer):
             self.goals.append( body )
 
     def create_body_ball(self):
-        mass = 1
+        mass = 2
         radius = 12
         inertia = pm.moment_for_circle(mass, 0, radius, (0,0))
         body = pm.Body(mass, inertia)
@@ -209,7 +212,7 @@ class GameLayer(cocos.layer.Layer):
         return (body,shape,sprite)
 
     def create_head_ball(self):
-        mass = 3
+        mass = 5
         radius = 15
         inertia = pm.moment_for_circle(mass, 0, radius, (0,0))
         body = pm.Body(mass, inertia)
@@ -225,7 +228,7 @@ class GameLayer(cocos.layer.Layer):
         return (body,shape,sprite)
 
     def create_tail_ball(self):
-        mass = 2
+        mass = 5
         radius = 13
         inertia = pm.moment_for_circle(mass, 0, radius, (0,0))
         body = pm.Body(mass, inertia)
@@ -260,7 +263,7 @@ class GameLayer(cocos.layer.Layer):
     def touched_goal_tail( self ):
         state.touched_goals += 1
         state.score += 1
-        if state.touched_goals == state.level.goals:
+        if state.touched_goals == self.level.goals:
             self.next_level()
         soundex.play('Gong_do.mp3')
 
@@ -362,23 +365,21 @@ class ControlLayer( cocos.layer.Layer ):
 
     def next_level( self ):
         state.score += 5 + state.time // 2
-        state.set_level( state.level_idx + 1 )
         self.parent.remove( self.model )
-        self.model = GameLayer(demo=False)
+        self.model = GameLayer(demo=False, start_level=state.level_idx + 1)
         self.parent.add( self.model )
         self.parent.get('hud').show_message( state.level.title )
 
 
 def get_game_scene():
     state.reset()
-    state.set_level( state.start_level )
 
     s = cocos.scene.Scene()
     s.add( HUD.BackgroundLayer(), z=-1 )
     hud = HUD.HUD()
     s.add( hud, z=1, name='hud' )
-    hud.show_message( state.level.title )
-    gameModel = GameLayer(demo=False)
+    gameModel = GameLayer(demo=False, start_level=state.start_level)
     s.add( gameModel, z=0 )
     s.add( ControlLayer( gameModel), z=0, name='ctrl' )
+    hud.show_message( state.level.title )
     return s
