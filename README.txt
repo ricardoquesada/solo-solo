@@ -28,6 +28,7 @@ HOW TO PLAY THE GAME:
 Move your "head".
 And try to hit the "goal" ball with your "tail"
 Use the arrow keys to control your "head".
+Your "head" shall not touch any "goal".
 
 
 LICENSE:

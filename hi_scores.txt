@@ -1,0 +1,10 @@
+200,where is grossini,10
+180,grossini,9
+150,grossini,8
+140,grossini,7
+130,grossini,6
+120,grossini,5
+110,grossini,5
+100,grossini,5
+90,grossini,5
+80,grossini,5

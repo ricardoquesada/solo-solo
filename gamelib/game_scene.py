@@ -11,6 +11,7 @@ from pyglet.window.key import *
 import cocos
 from cocos.director import director
 from cocos.sprite import *
+from cocos import euclid
 
 # pymunk
 import pymunk as pm
@@ -288,6 +289,8 @@ class ControlLayer( cocos.layer.Layer ):
         self.schedule_interval( self.delay_start, 1.1 )
         self.schedule_interval( self.time_callback, 1.0 )
 
+        self.keys_pressed = set()
+
     def time_callback( self, dt ):
         if state.state == state.STATE_PLAY:
             state.time = state.time - 1
@@ -316,52 +319,46 @@ class ControlLayer( cocos.layer.Layer ):
         super(ControlLayer,self).on_exit()
         soundex.stop_music()
 
-    def on_key_press (self, key, modifiers):
-        if state.state == state.STATE_PLAY:
-            if key in (LEFT, RIGHT, UP, DOWN):
-                force_value = 50
-                force = (0,0)
-                if key == UP:
-                    force = (0,force_value)
-                elif key == DOWN:
-                    force = (0,-force_value)
-                elif key == LEFT:
-                    force = (-force_value,0)
-                elif key == RIGHT:
-                    force = (force_value,0)
-#            self.chain[0].apply_force(force, (0,0) )
-                self.model.chain[0].apply_impulse(force, (0,0) )
-                return True 
-        return False 
+    def update_keys(self):
+        v = euclid.Vector2( 0, 0)
+        
+        for key in self.keys_pressed:
+            if key == LEFT:
+                v += (-1,0)
+            elif key == RIGHT:
+                v += (1,0)
+            elif key == UP:
+                v += (0,1)
+            elif key == DOWN:
+                v += (0,-1)
+
+        v = v.normalize()
+        v = v * 50
+        self.model.chain[0].apply_impulse(v, (0,0) )
 
     def on_key_press (self, key, modifiers):
         if state.state == state.STATE_PLAY:
             if key in (LEFT, RIGHT, UP, DOWN):
-                force_value = 50
-                force = (0,0)
-                if key == UP:
-                    force = (0,force_value)
-                elif key == DOWN:
-                    force = (0,-force_value)
-                elif key == LEFT:
-                    force = (-force_value,0)
-                elif key == RIGHT:
-                    force = (force_value,0)
-#            self.chain[0].apply_force(force, (0,0) )
-                self.model.chain[0].apply_impulse(force, (0,0) )
+                self.keys_pressed.add(key)
+                self.update_keys()
                 return True 
         return False 
+
+    def on_key_release (self, key, modifiers):
+        if state.state == state.STATE_PLAY:
+            if key in (LEFT, RIGHT, UP, DOWN):
+                self.keys_pressed.remove(key)
+                self.update_keys()
+                return True 
+        return False 
+
 
     def on_text_motion(self, motion):
-        if motion == pyglet.window.key.MOTION_UP:
-            self.on_key_press( UP, None)
-        elif motion == pyglet.window.key.MOTION_DOWN:
-            self.on_key_press( DOWN, None)
-        elif motion == pyglet.window.key.MOTION_LEFT:
-            self.on_key_press( LEFT, None)
-        elif motion == pyglet.window.key.MOTION_RIGHT:
-            self.on_key_press( RIGHT, None)
-        return True
+        if state.state == state.STATE_PLAY:
+            if motion in ( MOTION_UP, MOTION_DOWN, MOTION_LEFT, MOTION_RIGHT ):
+                self.update_keys()
+                return True
+        return False
 
     def next_level( self ):
         state.score += 5 + state.time // 2

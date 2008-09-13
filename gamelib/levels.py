@@ -12,14 +12,27 @@ class Level( object ):
 
     title = "NO TITLE"
 
-class Level0( Level ):
+class LevelTut( Level ):
     balls = 2
 
-    goals_pos = [ (150,300), (490,300) ]
+    head_pos = (250,100)
+
+    goals_pos = [ (500,100) ]
+    goals_forces = [ (0,0) ]
     goals = len( goals_pos )
     gravity = (0,0)
 
     title = "Level 0: Tutorial"
+
+class Level0( Level ):
+    balls = 2
+
+    gravity = (0,0)
+    goals_pos = [ (50,30), (600,30) ]
+    goals_forces = [ (0,0), (0,0) ]
+    goals = len( goals_pos )
+
+    title = "Level 0: Easy"
 
 class Level1( Level ):
     balls = 2
@@ -104,12 +117,19 @@ class Level8( Level ):
     balls = 2
     head_pos = (320,50)
 
-    gravity = (0,-60)
-    goals_pos = [ (490,60)]
-    goals_forces = [ (0,1200)]
+    gravity = (0,-12)
+
+    goals_pos = [ (150,300), (490,300), (640/2,250), (640/2,350) ]
+    goals_forces = [ (250,0), (-250,0), (0,250), (0,-250) ]
     goals = len( goals_pos )
 
-    title = "Level 7: Jump" 
+    title = "Level 8: Movement 2" 
+
+class Level9 ( Level ):
+    pass
+
+class Level10 ( Level ):
+    pass
 
 
-levels = [ Level0, Level1, Level2, Level3, Level4, Level5, Level6, Level7 ]
+levels = [ LevelTut, Level0, Level1, Level2, Level3, Level4, Level5, Level6, Level7, Level8, Level9, Level10 ]
