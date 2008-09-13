@@ -38,6 +38,5 @@ GNU GPL v3
 CREDITS:
   . SoloSolo team: Ricardo Quesada
   . using pyglet & cocos2d
-  . using code from the game Tetrico (by the cocos2d team)
+  . using code, fonts, some graphics, and sound effects from the Tetrico game (by the cocos2d team)
   . Music: by Ben Akusto ( http://www.jamendo.com/en/album/5378 )
-  . Sound effects: from the game Tetrico (by the cocos2d team)

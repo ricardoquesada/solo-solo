@@ -68,9 +68,9 @@ class GameLayer(cocos.layer.Layer):
 
         self.add_segments()
         self.add_balls()
-        self.add_goal()
-
+        
         if not self.demo_mode:
+            self.add_goal()
             self.space.add_collisionpair_func( COLL_TYPE_TAIL, COLL_TYPE_GOAL, self.collision_tail_goal, None)
             self.space.add_collisionpair_func( COLL_TYPE_HEAD, COLL_TYPE_GOAL, self.collision_head_goal, None)
 
@@ -94,7 +94,6 @@ class GameLayer(cocos.layer.Layer):
         for i,goal in enumerate(self.goals):
             goal.reset_forces()
             goal.apply_force( self.level.goals_forces[i], (0,0) )
-
 
 
     # collision detection
@@ -144,10 +143,10 @@ class GameLayer(cocos.layer.Layer):
         body = pm.Body(pm.inf, pm.inf)           # mass, inertia
         body.position = (0,0)               #     
 
-        l0 = pm.Segment(body, (0,1), (x,1), 5.0)
-        l1 = pm.Segment(body, (0,0), (0,y), 5.0)
-        l2 = pm.Segment(body, (x,1), (x,y), 5.0)
-        l3 = pm.Segment(body, (0,y), (x,y), 5.0)
+        l0 = pm.Segment(body, (-2,-2), (x+2,-2), 5.0)
+        l1 = pm.Segment(body, (-2,-2), (-2,y+2), 5.0)
+        l2 = pm.Segment(body, (x,-2), (x+2,y+2), 5.0)
+        l3 = pm.Segment(body, (-2,y), (x+2,y+2), 5.0)
         l0.friction = 0.2
         l1.friction = 0.2
         l2.friction = 0.2
@@ -267,24 +266,16 @@ class GameLayer(cocos.layer.Layer):
             self.next_level()
         soundex.play('Gong_do.mp3')
 
-
     def touched_goal_head( self ):
-        soundex.play('no.mp3')
-        self.game_over()
+        self.parent.get('ctrl').game_over()
 
     def next_level( self ):
-        if state.level_idx == len( levels.levels) -1:
-            self.you_win()
-        else:
-            self.parent.get('ctrl').next_level()
+        if state.state == state.STATE_PLAY:
+            if state.level_idx == len( levels.levels) -1:
+                self.parent.get('ctrl').you_win()
+            else:
+                self.parent.get('ctrl').next_level()
 
-    def you_win( self ):
-        self.parent.add( gameover.GameOver( win=True) , z=10 )
-        state.state = state.STATE_WIN
-
-    def game_over( self ):
-        self.parent.add( gameover.GameOver( win=False) , z=10 )
-        state.state = state.STATE_OVER
 
 class ControlLayer( cocos.layer.Layer ):
 
@@ -302,15 +293,24 @@ class ControlLayer( cocos.layer.Layer ):
             state.time = state.time - 1
             if state.time < 0:
                 state.time = 0
-                state.state = state.STATE_OVER
-                self.parent.add( gameover.GameOver( win=False) , z=10 )
+                self.game_over()
 
     def delay_start( self, dt ):
-        self.unschedule( self.delay_start )
+        if state.state == state.STATE_PAUSE:
+            self.unschedule( self.delay_start )
+            soundex.set_music('Sick Ted.mp3')
+            soundex.play_music()
+            state.state = state.STATE_PLAY
 
-        soundex.set_music('Sick Ted.mp3')
-        soundex.play_music()
-        state.state = state.STATE_PLAY
+    def game_over(self):
+        if state.state == state.STATE_PLAY:
+            state.state = state.STATE_OVER
+            self.parent.add( gameover.GameOver( win=False) , z=10 )
+
+    def you_win(self):
+        if state.state == state.STATE_PLAY:
+            state.state = state.STATE_WIN
+            self.parent.add( gameover.GameOver( win=True) , z=10 )
 
     def on_exit(self):
         super(ControlLayer,self).on_exit()
@@ -369,6 +369,15 @@ class ControlLayer( cocos.layer.Layer ):
         self.model = GameLayer(demo=False, start_level=state.level_idx + 1)
         self.parent.add( self.model )
         self.parent.get('hud').show_message( state.level.title )
+
+        state.start_level = max( state.start_level, state.level_idx )
+
+    def restart_level( self ):
+        self.parent.remove( self.model )
+        self.model = GameLayer(demo=False, start_level=state.level_idx )
+        self.parent.add( self.model )
+        self.parent.get('hud').show_message( state.level.title )
+        state.state = state.STATE_PLAY
 
 
 def get_game_scene():

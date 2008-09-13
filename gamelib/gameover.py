@@ -15,7 +15,7 @@ from cocos.actions import *
 # tetrico related
 import soundex
 import hiscore
-import state
+from state import state
 
 
 class GameOver( ColorLayer ):
@@ -25,6 +25,8 @@ class GameOver( ColorLayer ):
         super(GameOver,self).__init__( 32,32,32,64)
 
         w,h = director.get_window_size()
+
+        self.win = win
 
         if win:
             soundex.play('oh_yeah.mp3')
@@ -51,7 +53,7 @@ class GameOver( ColorLayer ):
         
         label.do( Repeat( Delay(5) + effect ) )
 
-        if hiscore.hiscore.is_in( state.state.score ):
+        if hiscore.hiscore.is_in( state.score ):
             self.hi_score = True
 
             label = Label('Enter your name:',
@@ -77,9 +79,23 @@ class GameOver( ColorLayer ):
         else:
             self.hi_score = False
 
+            if not self.win:
+                label = Label("Press 'R' to restart level",
+                            font_name='Edit Undo Line BRK',
+                            font_size=18,
+                            anchor_y='center',
+                            anchor_x='center' )
+                label.position =  ( w/2.0, 20 )
+                self.add( label )
+
     def on_key_press( self, k, m ):
         if not self.hi_score and (k == key.ENTER or k == key.ESCAPE):
             director.pop()
+            return True
+
+        if not self.hi_score and (k == key.R) and not self.win:
+            self.parent.remove( self )
+            self.parent.get('ctrl').restart_level()
             return True
 
         if self.hi_score:
@@ -87,7 +103,7 @@ class GameOver( ColorLayer ):
                 self.name.element.text = self.name.element.text[0:-1]
                 return True
             elif k == key.ENTER:
-                hiscore.hiscore.add( state.state.score,self.name.element.text,state.state.level_idx )
+                hiscore.hiscore.add( state.score,self.name.element.text,state.level_idx )
                 director.pop()
                 return True
         return False

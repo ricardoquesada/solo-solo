@@ -71,6 +71,7 @@ class MessageLayer( Layer ):
         self.msg = Label( msg,
             font_size=42,
             font_name='Edit Undo Line BRK',
+            color=(64,64,64,255),
             anchor_y='center',
             anchor_x='center' )
         self.msg.position=(w/2.0, h)
@@ -78,7 +79,7 @@ class MessageLayer( Layer ):
         self.msg2 = Label( msg,
             font_size=42,
             font_name='Edit Undo Line BRK',
-            color=(64,64,64,255),
+            color=(255,255,255,255),
             anchor_y='center',
             anchor_x='center' )
         self.msg2.position=(w/2.0+2, h+2)

@@ -301,8 +301,8 @@ def get_menu_scene():
                 z=2 ) 
     scene.add( BackgroundLayer(), z=0 )
 #    scene.add( TitleLayer(), z=2)
-#    game_model = GameLayer(demo=True)
-#    scene.add( game_model, z=1)
-#    scene.add( MenuControlLayer( game_model), z=0)
+    game_model = GameLayer(demo=True)
+    scene.add( game_model, z=1)
+    scene.add( MenuControlLayer( game_model), z=0)
 
     return scene

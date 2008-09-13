@@ -32,6 +32,7 @@ class State( object ):
         self.score = 0
         self.level = None
         self.level_idx = None
+        self.state = self.STATE_PAUSE
 
     def set_level( self, l ):
         self.level_idx = l
