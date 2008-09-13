@@ -62,8 +62,6 @@ class ScoreLayer( Layer ):
         lvl = state.level_idx or 0
         self.lvl.element.text = 'Lvl:%d' % lvl
         
-        if state.next_piece:
-            state.next_piece.draw()
 
 class MessageLayer( Layer ):
     def show_message( self, msg, callback=None ):

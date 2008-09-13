@@ -2,18 +2,24 @@
 import math
 import random
 
-# 3rd party libs
+# pyglet
 import pyglet
 from pyglet.gl import *
 from pyglet.window.key import *
 
+# cocos
 import cocos
 from cocos.director import director
 from cocos.sprite import *
+
+# pymunk
 import pymunk as pm
 
 # locals
 from primitives import *
+from state import state
+import levels
+import soundex
 import HUD
 
 COLL_TYPE_IGNORE, COLL_TYPE_HEAD, COLL_TYPE_BODY, COLL_TYPE_TAIL, COLL_TYPE_GOAL = range(5)
@@ -39,12 +45,17 @@ def drawCircleShape(circle):
 
 
 class GameLayer(cocos.layer.Layer):
-    is_event_handler = True     #: enable pyglet's events
 
-    def __init__(self):
+    def __init__(self, demo=False):
         super(GameLayer,self).__init__()
 
         self.schedule( self.step )
+
+        self.demo_mode = demo
+        if self.demo_mode:
+            self.number_of_balls = 6
+        else:
+            self.number_of_balls = 2
 
         pm.init_pymunk()
         self.space = pm.Space( iterations=10)
@@ -52,11 +63,15 @@ class GameLayer(cocos.layer.Layer):
 
         self.chain = []
 
+        self.to_remove = []
+
         self.add_segments()
         self.add_balls()
         self.add_goal()
 
-        self.space.add_collisionpair_func( COLL_TYPE_TAIL, COLL_TYPE_GOAL, self.collision_head_goal, None)
+        if not self.demo_mode:
+            self.space.add_collisionpair_func( COLL_TYPE_TAIL, COLL_TYPE_GOAL, self.collision_tail_goal, None)
+            self.space.add_collisionpair_func( COLL_TYPE_HEAD, COLL_TYPE_GOAL, self.collision_head_goal, None)
 
 
     def step(self, dt):
@@ -66,8 +81,11 @@ class GameLayer(cocos.layer.Layer):
                 elem.data.position = elem.body.position
                 elem.data.rotation = -math.degrees( elem.body.angle )
 
-
         self.space.step(dt)
+
+        for i in self.to_remove:        
+            self.space.remove( i )
+        self.to_remove = []
 
         for body in self.chain:
             body.reset_forces()
@@ -79,12 +97,22 @@ class GameLayer(cocos.layer.Layer):
 
 
     # collision detection
-    def collision_head_goal(self, shapeA, shapeB, contacts, normal_coef, data):
-        print shapeA, shapeB
+    def collision_tail_goal(self, shapeA, shapeB, contacts, normal_coef, data):
+#        print shapeA, shapeB
         body,shape,sprite = self.create_body_ball()
         body.position = self.chain[-2].position + (5,5)
         self.attach_ball(body)
         self.chain.insert(-1,body)
+
+        self.to_remove.append( shapeB.body )
+        self.remove( shapeB.data )
+
+        self.touched_goal_tail()
+        return True
+
+    def collision_head_goal(self, shapeA, shapeB, contacts, normal_coef, data):
+#        print shapeA, shapeB
+        self.touched_goal_head()
         return True
 
 #    def draw( self ):
@@ -132,15 +160,15 @@ class GameLayer(cocos.layer.Layer):
     def add_balls(self):
         """Add a ball to the space space at a random position"""
 
-        NUM_BALLS = 2
-        for i in xrange(NUM_BALLS):
+        for i in xrange(self.number_of_balls):
             if i==0:
                 body,shape,sprite = self.create_head_ball()
-            elif i==NUM_BALLS-1:                
+            elif i==self.number_of_balls-1:                
                 body,shape,sprite = self.create_tail_ball()
             else:
                 body,shape,sprite = self.create_body_ball()
-            body.position = (320+i*10,50)
+            x,y = state.level.head_pos
+            body.position = (x+i*10,y)
 
 
             if len( self.chain) > 0:
@@ -154,10 +182,11 @@ class GameLayer(cocos.layer.Layer):
         pass
 
     def add_goal(self):
-        body,shape,sprite = self.create_goal_ball()
-        body.position = 400,400
-        self.add( sprite, z=-1)
-        self.space.add(body, shape)
+        for goal in state.level.goals_pos:
+            body,shape,sprite = self.create_goal_ball()
+            body.position = goal
+            self.add( sprite, z=-1)
+            self.space.add(body, shape)
 
     def create_body_ball(self):
         mass = 1
@@ -223,6 +252,46 @@ class GameLayer(cocos.layer.Layer):
         self.add( sprite, z=-1 )
         return (body,shape,sprite)
 
+
+    def touched_goal_tail( self ):
+        state.touched_goals += 1
+        if state.touched_goals == state.level.goals:
+            self.next_level()
+        soundex.play('Gong_do.mp3')
+
+
+    def touched_goal_head( self ):
+        state.touched_goals += 1
+        if state.touched_goals == state.level.goals:
+            self.next_level()
+        soundex.play('Gong_do.mp3')
+
+    def next_level( self ):
+        state.set_level( state.level_idx + 1 )
+        if state.level_idx == len( levels.levels ):
+            self.you_win()
+
+    def you_win( self ):
+        pass
+
+class ControlLayer( cocos.layer.Layer ):
+
+    is_event_handler = True     #: enable pyglet's events
+    
+    def __init__(self, model):
+        super(ControlLayer,self).__init__()
+        self.model = model
+
+    def on_enter(self):
+        super(ControlLayer,self).on_enter()
+
+        soundex.set_music('Sick Ted.mp3')
+        soundex.play_music()
+
+    def on_exit(self):
+        super(ControlLayer,self).on_exit()
+        soundex.stop_music()
+
     def on_key_press (self, key, modifiers):
         if key in (LEFT, RIGHT, UP, DOWN, R):
             force_value = 50
@@ -239,14 +308,18 @@ class GameLayer(cocos.layer.Layer):
                 force = (0,0)
                 self.chain[0].reset_forces()
 #            self.chain[0].apply_force(force, (0,0) )
-            self.chain[0].apply_impulse(force, (0,0) )
+            self.model.chain[0].apply_impulse(force, (0,0) )
             return True 
         return False 
 
-
 def get_game_scene():
+    state.reset()
+    state.set_level( 0 )
+
     s = cocos.scene.Scene()
-    s.add( GameLayer(), z=0)
+    gameModel = GameLayer(demo=False)
+    s.add( gameModel, z=0)
+    s.add( ControlLayer( gameModel), z=0 )
     s.add( HUD.BackgroundLayer(), z=-1)
     s.add( HUD.HUD(), z=1 )
     return s

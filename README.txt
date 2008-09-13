@@ -2,17 +2,14 @@ So long ago
 ===========
 
 Entry in PyWeek #7  <http://www.pyweek.org/4/>
-Team: YOUR TEAM NAME (leave the "Team: bit")
-Members: YOUR TEAM MEMBERS (leave the "Members: bit")
-
+Team: Solo solo
+Members: riq
 
 DEPENDENCIES:
 
 You might need to install some of these before running the game:
 
   Python:     http://www.python.org/
-  PyGame:     http://www.pygame.org/
-  PyOpenGL:   http://pyopengl.sf.net/
 
 
 
@@ -28,13 +25,19 @@ Othewise open a terminal / console and "cd" to the game directory and run:
 
 HOW TO PLAY THE GAME:
 
-Move the cursor around the screen with the mouse.
-
-Press the left mouse button to fire the ducks.
-
+Move your "head".
+And try to hit the "goal" ball with your "tail"
+Use the arrow keys to control your "head".
 
 
 LICENSE:
 
-This game skellington is placed in the Public Domain.
+GNU GPL v3
 
+
+CREDITS:
+  . SoloSolo team: Ricardo Quesada
+  . using pyglet & cocos2d
+  . using code from the game Tetrico (by the cocos2d team)
+  . Music: by Ben Akusto ( http://www.jamendo.com/en/album/5378 )
+  . Sound effects: from the game Tetrico (by the cocos2d team)

@@ -1,4 +1,4 @@
-
+import levels
 __all__ = [ 'state' ]
 
 class State( object ):
@@ -7,27 +7,22 @@ class State( object ):
         # current score
         self.score = 0
 
-        # next piece
-        self.next_piece = None
-
         # current level
         self.level = None
+
+        # touched goals
+        self.touched_goals = 0
 
         # current level idx
         self.level_idx = None
 
-        # level lines completed
-        self.lines = 0
-
-        # total lines completed
-        self.tot_lines = 0
-
     def reset( self ):
         self.score = 0
-        self.next_piece = None
         self.level = None
         self.level_idx = None
-        self.lines = 0
-        self.tot_lines = 0
+
+    def set_level( self, l ):
+        self.level_idx = l
+        self.level = levels.levels[l]
 
 state = State()
