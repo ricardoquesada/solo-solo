@@ -270,9 +270,7 @@ class GameLayer(cocos.layer.Layer):
         self.game_over()
 
     def next_level( self ):
-        state.score += 5 + state.time // 2
-        state.set_level( state.level_idx + 1 )
-        if state.level_idx == len( levels.levels ):
+        if state.level_idx == len( levels.levels) -1:
             self.you_win()
         else:
             self.parent.get('ctrl').next_level()
@@ -301,7 +299,8 @@ class ControlLayer( cocos.layer.Layer ):
             state.time = state.time - 1
             if state.time < 0:
                 state.time = 0
-                state.state = state.GAME_OVER
+                state.state = state.STATE_OVER
+                self.parent.add( gameover.GameOver( win=False) , z=10 )
 
     def delay_start( self, dt ):
         self.unschedule( self.delay_start )
@@ -362,6 +361,8 @@ class ControlLayer( cocos.layer.Layer ):
         return True
 
     def next_level( self ):
+        state.score += 5 + state.time // 2
+        state.set_level( state.level_idx + 1 )
         self.parent.remove( self.model )
         self.model = GameLayer(demo=False)
         self.parent.add( self.model )
