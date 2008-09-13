@@ -37,13 +37,13 @@ class ScoreLayer( Layer ):
         self.score.position=(0,0)
         self.add( self.score)
 
-        self.lines=  Label('Lines:', font_size=36,
+        self.time= Label('time:', font_size=36,
                 font_name='Edit Undo Line BRK',
                 color=(255,255,255,255),
                 anchor_x='left',
                 anchor_y='bottom')
-        self.lines.position=(235,0)
-        self.add( self.lines)
+        self.time.position=(245,0)
+        self.add( self.time)
 
         self.lvl=  Label('Lvl:', font_size=36,
                 font_name='Edit Undo Line BRK',
@@ -51,13 +51,13 @@ class ScoreLayer( Layer ):
                 anchor_x='left',
                 anchor_y='bottom')
 
-        self.lvl.position=(450,0)
+        self.lvl.position=(480,0)
         self.add( self.lvl)
 
     def draw(self):
         super( ScoreLayer, self).draw()
         self.score.element.text = 'Score:%d' % state.score 
-        self.lines.element.text = 'Lines:%d' % max(0, 0)
+        self.time.element.text = 'time:%d' % state.time
 
         lvl = state.level_idx or 0
         self.lvl.element.text = 'Lvl:%d' % lvl
@@ -69,13 +69,22 @@ class MessageLayer( Layer ):
         w,h = director.get_window_size()
 
         self.msg = Label( msg,
-            font_size=52,
+            font_size=42,
             font_name='Edit Undo Line BRK',
             anchor_y='center',
             anchor_x='center' )
         self.msg.position=(w/2.0, h)
 
-        self.add( self.msg )
+        self.msg2 = Label( msg,
+            font_size=42,
+            font_name='Edit Undo Line BRK',
+            color=(64,64,64,255),
+            anchor_y='center',
+            anchor_x='center' )
+        self.msg2.position=(w/2.0+2, h+2)
+
+        self.add( self.msg, z=1 )
+        self.add( self.msg2, z=0 )
 
         actions = Accelerate(MoveBy( (0,-h/2.0), duration=0.5)) + \
                     Delay(1) +  \
@@ -86,6 +95,7 @@ class MessageLayer( Layer ):
             actions += CallFunc( callback )
 
         self.msg.do( actions )
+        self.msg2.do( actions )
 
 class HUD( Layer ):
     def __init__( self ):

@@ -62,7 +62,7 @@ class GameOver( ColorLayer ):
                         color=(32,32,32,255),
                         )
             label.position =  ( w/2.0, h/2.0 )
-            label.position = (w//2, 300)
+            label.position = (w//2, 130)
             self.add( label )
 
             self.name= Label('',
@@ -72,7 +72,7 @@ class GameOver( ColorLayer ):
                         anchor_x='center',
                         color=(32,32,32,255),
                         )
-            self.name.position=(w//2,250)
+            self.name.position=(w//2,80)
             self.add(self.name)
         else:
             self.hi_score = False

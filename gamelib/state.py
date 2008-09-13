@@ -20,8 +20,13 @@ class State( object ):
         # current level idx
         self.level_idx = None
 
+        # time
+        self.time = 0
+
         # state
         self.state = self.STATE_PAUSE
+
+        self.start_level = 0
 
     def reset( self ):
         self.score = 0
@@ -32,5 +37,6 @@ class State( object ):
         self.level_idx = l
         self.level = levels.levels[l]
         self.touched_goals = 0
+        self.time = self.level.time
 
 state = State()

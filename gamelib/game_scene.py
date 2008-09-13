@@ -53,16 +53,15 @@ class GameLayer(cocos.layer.Layer):
         self.schedule( self.step )
 
         self.demo_mode = demo
-        if self.demo_mode:
-            self.number_of_balls = 6
-        else:
-            self.number_of_balls = 2
 
         pm.init_pymunk()
         self.space = pm.Space( iterations=10)
-        self.space.gravity = (0, 0.0)
+
+        self.space.gravity = state.level.gravity
+        self.space.damping = 0.8
 
         self.chain = []
+        self.goals = []
 
         self.add_segments()
         self.add_balls()
@@ -82,13 +81,16 @@ class GameLayer(cocos.layer.Layer):
 
         self.space.step(dt)
 
-
         for body in self.chain:
             body.reset_forces()
 
         for i,b in enumerate( self.chain):
             if i > 0:
                 self.chain[i-1].damped_spring( self.chain[i], (0,0), (0,0), 40.0, 200.0, 50.0, dt)
+
+        for i,goal in enumerate(self.goals):
+            goal.reset_forces()
+            goal.apply_force( state.level.goals_forces[i], (0,0) )
 
 
 
@@ -157,10 +159,14 @@ class GameLayer(cocos.layer.Layer):
     def add_balls(self):
         """Add a ball to the space space at a random position"""
 
-        for i in xrange(self.number_of_balls):
+        if self.demo_mode:
+            number_of_balls = 6
+        else:
+            number_of_balls = state.level.balls
+        for i in xrange(number_of_balls):
             if i==0:
                 body,shape,sprite = self.create_head_ball()
-            elif i==self.number_of_balls-1:                
+            elif i==number_of_balls-1:                
                 body,shape,sprite = self.create_tail_ball()
             else:
                 body,shape,sprite = self.create_body_ball()
@@ -174,7 +180,7 @@ class GameLayer(cocos.layer.Layer):
             self.chain.append( body )
 
     def attach_ball( self, body ):
-#        joint = pm.SlideJoint(self.chain[-1], body, (0,0), (0,0), 25, 40)
+#        joint = pm.SlideJoint(self.chain[-1], body, (0,0), (0,0), 5, 50)
 #        self.space.add( joint )
         pass
 
@@ -184,6 +190,7 @@ class GameLayer(cocos.layer.Layer):
             body.position = goal
             self.add( sprite, z=-1)
             self.space.add(body, shape)
+            self.goals.append( body )
 
     def create_body_ball(self):
         mass = 1
@@ -252,6 +259,7 @@ class GameLayer(cocos.layer.Layer):
 
     def touched_goal_tail( self ):
         state.touched_goals += 1
+        state.score += 1
         if state.touched_goals == state.level.goals:
             self.next_level()
         soundex.play('Gong_do.mp3')
@@ -262,6 +270,7 @@ class GameLayer(cocos.layer.Layer):
         self.game_over()
 
     def next_level( self ):
+        state.score += 5 + state.time // 2
         state.set_level( state.level_idx + 1 )
         if state.level_idx == len( levels.levels ):
             self.you_win()
@@ -285,7 +294,14 @@ class ControlLayer( cocos.layer.Layer ):
         self.model = model
 
         self.schedule_interval( self.delay_start, 1.1 )
+        self.schedule_interval( self.time_callback, 1.0 )
 
+    def time_callback( self, dt ):
+        if state.state == state.STATE_PLAY:
+            state.time = state.time - 1
+            if state.time < 0:
+                state.time = 0
+                state.state = state.GAME_OVER
 
     def delay_start( self, dt ):
         self.unschedule( self.delay_start )
@@ -316,20 +332,51 @@ class ControlLayer( cocos.layer.Layer ):
                 return True 
         return False 
 
+    def on_key_press (self, key, modifiers):
+        if state.state == state.STATE_PLAY:
+            if key in (LEFT, RIGHT, UP, DOWN):
+                force_value = 50
+                force = (0,0)
+                if key == UP:
+                    force = (0,force_value)
+                elif key == DOWN:
+                    force = (0,-force_value)
+                elif key == LEFT:
+                    force = (-force_value,0)
+                elif key == RIGHT:
+                    force = (force_value,0)
+#            self.chain[0].apply_force(force, (0,0) )
+                self.model.chain[0].apply_impulse(force, (0,0) )
+                return True 
+        return False 
+
+    def on_text_motion(self, motion):
+        if motion == pyglet.window.key.MOTION_UP:
+            self.on_key_press( UP, None)
+        elif motion == pyglet.window.key.MOTION_DOWN:
+            self.on_key_press( DOWN, None)
+        elif motion == pyglet.window.key.MOTION_LEFT:
+            self.on_key_press( LEFT, None)
+        elif motion == pyglet.window.key.MOTION_RIGHT:
+            self.on_key_press( RIGHT, None)
+        return True
+
     def next_level( self ):
         self.parent.remove( self.model )
         self.model = GameLayer(demo=False)
         self.parent.add( self.model )
+        self.parent.get('hud').show_message( state.level.title )
+
 
 def get_game_scene():
     state.reset()
-    state.set_level( 0 )
+    state.set_level( state.start_level )
 
     s = cocos.scene.Scene()
     s.add( HUD.BackgroundLayer(), z=-1 )
     hud = HUD.HUD()
     s.add( hud, z=1, name='hud' )
-    hud.show_message('GET READY!')
+    hud.show_message( state.level.title )
     gameModel = GameLayer(demo=False)
     s.add( gameModel, z=0 )
     s.add( ControlLayer( gameModel), z=0, name='ctrl' )

@@ -21,6 +21,7 @@ import soundex
 import hiscore
 import random
 import math
+import levels
 
 class TitleLayer( Layer ):
     def __init__(self):
@@ -37,27 +38,28 @@ class TitleLayer( Layer ):
 
 class ScoresLayer( ColorLayer):
 
-    FONT_SIZE=30
+    FONT_SIZE=22
 
     is_event_handler = True #: enable pyglet's events
 
     def __init__(self):
 
         w,h = director.get_window_size()
-        super( ScoresLayer,self).__init__( 32,32,32,16, width=w, height=h-86)
+        super( ScoresLayer,self).__init__( 32,32,32,16, width=w, height=h-97)
 
         self.font_title = {}
 
         # you can override the font that will be used for the title and the items
         self.font_title['font_name'] = 'Edit Undo Line BRK'
         self.font_title['font_size'] = 72
-        self.font_title['color'] = (204,164,164,255)
+#        self.font_title['color'] = (204,164,164,255)
+        self.font_title['color'] = (255,255,255,255)
         self.font_title['anchor_y'] ='top'
         self.font_title['anchor_x'] ='center'
 
-        title = Label('TETRICO', **self.font_title )
+        title = Label('SO LONG', **self.font_title )
 
-        title.position=(w/2.0,h)
+        title.position=(w/2.0,h-5)
 
         self.add(title,z=1)
 
@@ -141,13 +143,15 @@ class ScoresLayer( ColorLayer):
 
 class OptionsMenu( Menu ):
     def __init__(self):
-        super( OptionsMenu, self).__init__('') 
+        super( OptionsMenu, self).__init__('SO LONG') 
         self.select_sound = soundex.load('move.mp3')
 
         # you can override the font that will be used for the title and the items
         self.font_title['font_name'] = 'Edit Undo Line BRK'
         self.font_title['font_size'] = 72
-        self.font_title['color'] = (204,164,164,255)
+#        self.font_title['color'] = (204,164,164,255)
+        self.font_title['color'] = (255,255,255,255)
+
 
         self.font_item['font_name'] = 'Edit Undo Line BRK',
         self.font_item['color'] = (32,16,32,255)
@@ -166,6 +170,15 @@ class OptionsMenu( Menu ):
         items = []
 
         self.volumes = ['Mute','10','20','30','40','50','60','70','80','90','100']
+
+        self.levels = [ str(i) for i in range( len(levels.levels))]
+
+        items.append( MultipleMenuItem(
+                        'Start Level: ', 
+                        self.on_level,
+                        self.levels,
+                        int(state.start_level) )
+                    )
 
         items.append( MultipleMenuItem(
                         'SFX volume: ', 
@@ -197,6 +210,9 @@ class OptionsMenu( Menu ):
         vol = idx / 10.0
         soundex.sound_volume( vol )
 
+    def on_level( self, idx ):
+        state.start_level = idx
+
     def on_music_volume( self, idx ):
         vol = idx / 10.0
         soundex.music_volume( vol )
@@ -204,7 +220,7 @@ class OptionsMenu( Menu ):
 class MainMenu( Menu ):
 
     def __init__(self):
-        super( MainMenu, self).__init__('') 
+        super( MainMenu, self).__init__('SO LONG') 
 
         self.select_sound = soundex.load('move.mp3')
 
@@ -213,7 +229,8 @@ class MainMenu( Menu ):
         # more info
         self.font_title['font_name'] = 'Edit Undo Line BRK'
         self.font_title['font_size'] = 72
-        self.font_title['color'] = (204,164,164,255)
+#        self.font_title['color'] = (204,164,164,255)
+        self.font_title['color'] = (255,255,255,255)
 
         self.font_item['font_name'] = 'Edit Undo Line BRK',
         self.font_item['color'] = (32,16,32,255)
@@ -283,7 +300,7 @@ def get_menu_scene():
                     ),
                 z=2 ) 
     scene.add( BackgroundLayer(), z=0 )
-    scene.add( TitleLayer(), z=2)
+#    scene.add( TitleLayer(), z=2)
 #    game_model = GameLayer(demo=True)
 #    scene.add( game_model, z=1)
 #    scene.add( MenuControlLayer( game_model), z=0)
