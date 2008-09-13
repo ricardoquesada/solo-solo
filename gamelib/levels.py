@@ -162,7 +162,7 @@ class LevelMachine( Level ):
     goals_forces = [ (-1600,0), (1800,0), (0,2000) ]
     goals = len( goals_pos )
 
-    title = "Love Machine"
+    title = "Rejected Love"
 
 class LevelPussy( Level ):
     balls = 2
