@@ -25,9 +25,8 @@ Othewise open a terminal / console and "cd" to the game directory and run:
 
 HOW TO PLAY THE GAME:
 
-Move your "head".
-And try to hit the "goal" ball with your "tail"
-Use the arrow keys to control your "head".
+Move your "head" (blue ball) with the arrow keys.
+And try to hit the "goal" ball (red ball) with your "tail" (red ball)
 Your "head" shall not touch any "goal".
 
 

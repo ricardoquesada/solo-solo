@@ -90,7 +90,7 @@ class GameLayer(cocos.layer.Layer):
 
         for i,b in enumerate( self.chain):
             if i > 0:
-                self.chain[i-1].damped_spring( self.chain[i], (0,0), (0,0), 30.0, 200.0, 50.0, dt)
+                self.chain[i-1].damped_spring( self.chain[i], (0,0), (0,0), 27.0, 200.0, 50.0, dt)
 
         for i,goal in enumerate(self.goals):
             goal.reset_forces()
@@ -365,7 +365,7 @@ class ControlLayer( cocos.layer.Layer ):
         self.parent.remove( self.model )
         self.model = GameLayer(demo=False, start_level=state.level_idx + 1)
         self.parent.add( self.model )
-        self.parent.get('hud').show_message( state.level.title )
+        self.parent.get('hud').show_message( 'Lvl %d: %s' % (state.level_idx, state.level.title) )
 
         state.start_level = max( state.start_level, state.level_idx )
 
@@ -373,8 +373,9 @@ class ControlLayer( cocos.layer.Layer ):
         self.parent.remove( self.model )
         self.model = GameLayer(demo=False, start_level=state.level_idx )
         self.parent.add( self.model )
-        self.parent.get('hud').show_message( state.level.title )
+        self.parent.get('hud').show_message( 'Lvl %d: %s' % (state.level_idx, state.level.title) )
         state.state = state.STATE_PLAY
+        self.keys_pressed = set()
 
 
 def get_game_scene():
@@ -387,5 +388,5 @@ def get_game_scene():
     gameModel = GameLayer(demo=False, start_level=state.start_level)
     s.add( gameModel, z=0 )
     s.add( ControlLayer( gameModel), z=0, name='ctrl' )
-    hud.show_message( state.level.title )
+    hud.show_message( 'Lvl %d: %s' % (state.level_idx, state.level.title) )
     return s
