@@ -21,6 +21,7 @@ from state import state
 import levels
 import soundex
 import HUD
+import gameover
 
 COLL_TYPE_IGNORE, COLL_TYPE_HEAD, COLL_TYPE_BODY, COLL_TYPE_TAIL, COLL_TYPE_GOAL = range(5)
 
@@ -63,8 +64,6 @@ class GameLayer(cocos.layer.Layer):
 
         self.chain = []
 
-        self.to_remove = []
-
         self.add_segments()
         self.add_balls()
         self.add_goal()
@@ -75,7 +74,7 @@ class GameLayer(cocos.layer.Layer):
 
 
     def step(self, dt):
-        balls_to_remove = []
+
         for elem in self.space.shapes:
             if isinstance(elem, pm.Circle):
                 elem.data.position = elem.body.position
@@ -83,9 +82,6 @@ class GameLayer(cocos.layer.Layer):
 
         self.space.step(dt)
 
-        for i in self.to_remove:        
-            self.space.remove( i )
-        self.to_remove = []
 
         for body in self.chain:
             body.reset_forces()
@@ -104,8 +100,9 @@ class GameLayer(cocos.layer.Layer):
         self.attach_ball(body)
         self.chain.insert(-1,body)
 
-        self.to_remove.append( shapeB.body )
-        self.remove( shapeB.data )
+        # XXX - removing doesn't work
+        shapeB.body.reset_forces()
+        shapeB.body.position = (-500,-500)
 
         self.touched_goal_tail()
         return True
@@ -261,65 +258,79 @@ class GameLayer(cocos.layer.Layer):
 
 
     def touched_goal_head( self ):
-        state.touched_goals += 1
-        if state.touched_goals == state.level.goals:
-            self.next_level()
-        soundex.play('Gong_do.mp3')
+        soundex.play('no.mp3')
+        self.game_over()
 
     def next_level( self ):
         state.set_level( state.level_idx + 1 )
         if state.level_idx == len( levels.levels ):
             self.you_win()
+        else:
+            self.parent.get('ctrl').next_level()
 
     def you_win( self ):
-        pass
+        self.parent.add( gameover.GameOver( win=True) , z=10 )
+        state.state = state.STATE_WIN
+
+    def game_over( self ):
+        self.parent.add( gameover.GameOver( win=False) , z=10 )
+        state.state = state.STATE_OVER
 
 class ControlLayer( cocos.layer.Layer ):
 
     is_event_handler = True     #: enable pyglet's events
-    
+   
     def __init__(self, model):
         super(ControlLayer,self).__init__()
         self.model = model
 
-    def on_enter(self):
-        super(ControlLayer,self).on_enter()
+        self.schedule_interval( self.delay_start, 1.1 )
+
+
+    def delay_start( self, dt ):
+        self.unschedule( self.delay_start )
 
         soundex.set_music('Sick Ted.mp3')
         soundex.play_music()
+        state.state = state.STATE_PLAY
 
     def on_exit(self):
         super(ControlLayer,self).on_exit()
         soundex.stop_music()
 
     def on_key_press (self, key, modifiers):
-        if key in (LEFT, RIGHT, UP, DOWN, R):
-            force_value = 50
-            force = (0,0)
-            if key == UP:
-                force = (0,force_value)
-            elif key == DOWN:
-                force = (0,-force_value)
-            elif key == LEFT:
-                force = (-force_value,0)
-            elif key == RIGHT:
-                force = (force_value,0)
-            elif key == R:
+        if state.state == state.STATE_PLAY:
+            if key in (LEFT, RIGHT, UP, DOWN):
+                force_value = 50
                 force = (0,0)
-                self.chain[0].reset_forces()
+                if key == UP:
+                    force = (0,force_value)
+                elif key == DOWN:
+                    force = (0,-force_value)
+                elif key == LEFT:
+                    force = (-force_value,0)
+                elif key == RIGHT:
+                    force = (force_value,0)
 #            self.chain[0].apply_force(force, (0,0) )
-            self.model.chain[0].apply_impulse(force, (0,0) )
-            return True 
+                self.model.chain[0].apply_impulse(force, (0,0) )
+                return True 
         return False 
+
+    def next_level( self ):
+        self.parent.remove( self.model )
+        self.model = GameLayer(demo=False)
+        self.parent.add( self.model )
 
 def get_game_scene():
     state.reset()
     state.set_level( 0 )
 
     s = cocos.scene.Scene()
+    s.add( HUD.BackgroundLayer(), z=-1 )
+    hud = HUD.HUD()
+    s.add( hud, z=1, name='hud' )
+    hud.show_message('GET READY!')
     gameModel = GameLayer(demo=False)
-    s.add( gameModel, z=0)
-    s.add( ControlLayer( gameModel), z=0 )
-    s.add( HUD.BackgroundLayer(), z=-1)
-    s.add( HUD.HUD(), z=1 )
+    s.add( gameModel, z=0 )
+    s.add( ControlLayer( gameModel), z=0, name='ctrl' )
     return s

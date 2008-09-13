@@ -689,5 +689,3 @@ class CocosNode(object):
             if action.done():
                 action.stop()
                 self.remove_action( action )
-
-

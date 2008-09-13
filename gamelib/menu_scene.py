@@ -238,8 +238,8 @@ class MainMenu( Menu ):
 
     def on_new_game(self):
         import game_scene
-        director.push( FlipAngular3DTransition(
-            game_scene.get_game_scene(), 1.5 ) )
+        director.push( FadeTransition(
+            game_scene.get_game_scene(), 1.0 ) )
 
     def on_options( self ):
         self.parent.switch_to(1)
