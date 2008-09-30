@@ -2,9 +2,9 @@
 190,grossini,9
 180,grossini,8
 170,grossini,7
+167,pancho,10
 160,grossini,6
 130,grossini,5
-120,grossini,5
 130,grossini,5
 120,grossini,5
-110,grossini,5
+120,grossini,5

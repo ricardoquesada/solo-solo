@@ -12,6 +12,7 @@ class Level( object ):
 
     title = "NO TITLE"
 
+
 class LevelTut( Level ):
     balls = 4
 
@@ -214,3 +215,32 @@ class LevelLove( Level ):
 
 
 levels = [ LevelTut, Level0, Level1, Level2, Level3, LevelKisses, LevelTantric, Level5, LevelMenage, LevelMachine, Level6, LevelSwingers, LevelLong, LevelColumn, LevelWorm, LevelPussy, LevelOrgy, LevelLove ]
+
+
+# convert to iPhone coordinates
+x_rate = 640.0/480.0
+y_rate = 480.0/320.0
+
+def parse_goals_pos( j ):
+    ret = ''
+    for g in j.goals_pos:
+        ret += '{%0.2f,%0.2f},' % ( g[0] / x_rate, g[1] / y_rate)
+    return ret
+
+def parse_goals_forces( j ):
+    ret = ''
+    for g in j.goals_forces:
+        ret += '{%0.2f,%0.2f},' % ( g[0], g[1])
+    return ret
+
+def parse_level( idx, level ):
+    print '// Level %d - %s' % (i, j.title)
+    print '{ {%0.2f,%0.2f}, {%0.2f,%0.2f}, %0.2f, %0.2f,' % (j.gravity[0], j.gravity[1], j.head_pos[0] / x_rate, j.head_pos[1] / y_rate, j.balls, j.goals)
+    print '\t\t{ %s },' % parse_goals_pos(j)
+    print '\t\t{ %s },' % parse_goals_forces(j)
+    print '\t@"%s",' % j.title
+    print '},\n\n'
+
+if __name__ == '__main__':
+    for i,j in enumerate(levels):
+        parse_level(i,j)
